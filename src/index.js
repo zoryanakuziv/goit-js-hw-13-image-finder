@@ -1,4 +1,3 @@
-import debounce from 'lodash.debounce';
 import * as basicLightbox from 'basiclightbox';
 import './sass/main.scss';
 import '@pnotify/core/dist/BrightTheme.css';
@@ -24,6 +23,7 @@ document.body.insertAdjacentHTML('afterbegin', searchFormTpl());
 const refs = {
   searchForm: document.querySelector('#search-form'),
   photoGallary: document.querySelector('.gallery'),
+  scrollElement: document.querySelector('.scroll-element'),
 };
 const photoApiService = new PhotoApiService();
 const loadMoreBtn = new LoadMoreBtn({
@@ -31,14 +31,14 @@ const loadMoreBtn = new LoadMoreBtn({
   hidden: true,
 });
 
-refs.searchForm.addEventListener('input', debounce(onInput, 600));
+refs.searchForm.addEventListener('submit', onSearch);
 loadMoreBtn.refs.button.addEventListener('click', fetchImages);
 refs.photoGallary.addEventListener('click', onImageEnlarge);
 
-function onInput(event) {
+function onSearch(event) {
   event.preventDefault();
   onClearForm();
-  photoApiService.query = event.target.value.toLowerCase();
+  photoApiService.query = event.currentTarget.elements.query.value.toLowerCase();
   loadMoreBtn.show();
   photoApiService.resetPage();
   fetchImages();
@@ -55,6 +55,7 @@ function fetchImages() {
       return;
     }
     renderPhotoCard(hits);
+    onScroll();
     loadMoreBtn.enable();
   });
 }
@@ -63,24 +64,26 @@ function onClearForm(error) {
   refs.photoGallary.innerHTML = '';
 }
 
-function renderPhotoCard(photo) {
-  const murkUp = photoCardsMurkUp(photo);
-  refs.photoGallary.innerHTML = murkUp;
+function renderPhotoCard(hits) {
+  refs.photoGallary.insertAdjacentHTML('beforeend', photoCardsMurkUp(hits));
+  if (hits.length < 12) {
+    document.body.insertAdjacentText('beforeend', 'No more images found in this category...');
+    loadMoreBtn.hide();
+  }
 }
 
-// const element = document.getElementsByClassName('.gallery');
-// element.scrollIntoView({
-//   behavior: 'smooth',
-//   block: 'end',
-// });
-
-// function onImageEnlarge(event) {
-//   if (event.currentTarget.hasAttribute('alt')) {
-//     const currentImage = currentTarget.dataset.source;
-//     console.log(currentImage);
-//     const instance = basicLightbox.create(`
-//     <img src="${currentImage}" alt="${target.alt}">
-// `);
-//     instance.show();
-//   }
-// }
+function onImageEnlarge(event) {
+  const targetImg = event.target;
+  const currentImage = targetImg.dataset.source;
+  // console.log(currentImage);
+  const instance = basicLightbox.create(`
+    <img src="${currentImage}" alt="${targetImg.alt}" >
+`);
+  instance.show(currentImage);
+}
+function onScroll() {
+  refs.scrollElement.scrollIntoView({
+    behavior: 'smooth',
+    block: 'end',
+  });
+}
