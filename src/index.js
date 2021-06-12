@@ -2,6 +2,7 @@ import * as basicLightbox from 'basiclightbox';
 import './sass/main.scss';
 import '@pnotify/core/dist/BrightTheme.css';
 import '@pnotify/core/dist/PNotify.css';
+import 'basiclightbox/src/styles/main.scss';
 import { defaults, error } from '@pnotify/core';
 defaults.width = '450px';
 defaults.delay = 3000;
@@ -24,6 +25,7 @@ const refs = {
   searchForm: document.querySelector('#search-form'),
   photoGallary: document.querySelector('.gallery'),
   scrollElement: document.querySelector('.scroll-element'),
+  endMessege: document.querySelector('.end-messege'),
 };
 const photoApiService = new PhotoApiService();
 const loadMoreBtn = new LoadMoreBtn({
@@ -67,8 +69,10 @@ function onClearForm(error) {
 function renderPhotoCard(hits) {
   refs.photoGallary.insertAdjacentHTML('beforeend', photoCardsMurkUp(hits));
   if (hits.length < 12) {
-    document.body.insertAdjacentText('beforeend', 'No more images found in this category...');
+    refs.endMessege.innerHTML = 'No more images found in this category...';
     loadMoreBtn.hide();
+  } else if (hits.length === 0 || hits.length > 12) {
+    refs.endMessege.innerHTML = '';
   }
 }
 
